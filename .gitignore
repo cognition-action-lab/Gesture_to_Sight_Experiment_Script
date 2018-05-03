@@ -1,0 +1,15 @@
+Debug/*
+!Debug/*.dll
+setup_resources/install_files
+ipch/
+Release/
+main_*
+Data/
+SDL2-2.0.5/
+*.dat
+*.coda
+*.sdf
+*.suo
+*.user
+*.opensdf
+*log.txt
