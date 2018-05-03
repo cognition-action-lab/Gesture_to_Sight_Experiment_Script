@@ -74,7 +74,7 @@ for a = 1:NPracticeTables
     
     fid = fopen(sprintf('practice%d_%s.txt',a,'NVF'),'wt');
     for d = 1:length(listB)
-        fprintf(fid,'%d %d %d %d\n',c,listB(d),ItemDuration,1); %note, for "practice" flag, logic is inverted
+        fprintf(fid,'%d %d %d %d\n',c,listB(d),ItemDuration,0); %note, for "practice" flag, logic is inverted
     end
     fclose(fid);
 end
