@@ -1098,7 +1098,9 @@ void game_update()
 					UCHAR Mask = 0xff; 
 
 					//set the lines high to be translucent
+					Ftdi::SetFtdiBitBang(ftHandle,Mask,4,1);
 					Ftdi::SetFtdiBitBang(ftHandle,Mask,3,1);
+					Ftdi::SetFtdiBitBang(ftHandle,Mask,2,1);
 					Ftdi::SetFtdiBitBang(ftHandle,Mask,1,1);
 					Target.lensstatus[0] = 0;
 					Target.lensstatus[1] = 0;
@@ -1184,7 +1186,9 @@ void game_update()
 				UCHAR Mask = 0xff; 
 
 				//set the lines high to be translucent
+				Ftdi::SetFtdiBitBang(ftHandle,Mask,4,0);
 				Ftdi::SetFtdiBitBang(ftHandle,Mask,3,0);
+				Ftdi::SetFtdiBitBang(ftHandle,Mask,2,0);
 				Ftdi::SetFtdiBitBang(ftHandle,Mask,1,0);
 				Target.lensstatus[0] = 1;
 				Target.lensstatus[1] = 1;
