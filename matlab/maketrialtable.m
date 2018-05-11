@@ -3,7 +3,7 @@
 NTablePairs = 10;  %generate this many PAIRS of tables
 NPracticeTables = NTablePairs;  %generate this many pairs of practice tables
 Items = { [1:20]; [21:41] };  %each cell is a subgrouping of items (i.e., high vs low conflict)
-PracticeItems = [41:45];
+PracticeItems = [42:45];
 ItemDuration = 3000; %time that the item is displayed, in msec
 
 rng('shuffle'); %reset the random number generator
