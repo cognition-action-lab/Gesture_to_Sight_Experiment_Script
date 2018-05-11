@@ -6,6 +6,7 @@ Release/
 main_*
 Data/
 SDL2-2.0.5/
+matlab/*.asv
 *.dat
 *.coda
 *.sdf

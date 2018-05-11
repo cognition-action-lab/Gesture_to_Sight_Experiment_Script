@@ -12,7 +12,7 @@
 #define SUBJECT_ID 999
 
 //define the file that contains the name of the trial table
-#define TRIALFILE "./TrialTables/test.txt"  
+#define TRIALFILE "./TrialTables/pair1/practice1_NVF.txt"  
 
 
 
@@ -61,13 +61,13 @@
 //screen dimensions
 //#define SCREEN_WIDTH  1920
 //#define SCREEN_HEIGHT  1080
-#define SCREEN_WIDTH  1440
+#define SCREEN_WIDTH  1600
 #define SCREEN_HEIGHT  900
 
 // Physical dimensions of the screen in meters
 #define PHYSICAL_WIDTH  0.307
-#define PHYSICAL_HEIGHT  0.192
-//#define PHYSICAL_HEIGHT  0.173
+#define PHYSICAL_HEIGHT  0.173
+//#define PHYSICAL_HEIGHT  0.192
 
 #define IMAGEX SCREEN_WIDTH/2
 #define IMAGEY SCREEN_HEIGHT/2
