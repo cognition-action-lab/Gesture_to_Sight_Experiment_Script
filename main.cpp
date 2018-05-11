@@ -75,6 +75,7 @@ Image* trialnum = NULL;
 Image* recordtext = NULL;
 Image* proceedtext = NULL;
 Image* returntext = NULL;
+Image* mousetext = NULL;
 Sound* startbeep = NULL;
 Sound* scorebeep = NULL;
 Sound* errorbeep = NULL;
@@ -225,12 +226,14 @@ int main(int argc, char* args[])
 
 					//std::cerr << "Redo requested" << std::endl;
 				}
+				/*
 				else if (event.key.keysym.sym == SDLK_o)
 				{
 					flagoffsetkey = 0;
 					Target.key = 'O';
 					//std::cerr << "Offsets requested" << std::endl;
 				}
+				*/
 				else if (event.key.keysym.sym == SDLK_SPACE)
 				{
 					nextstateflag = true;
@@ -511,8 +514,8 @@ bool init()
 	startCircle->SetBorderWidth(0.001f);
 	startCircle->SetBorderColor(blkColor);
 	startCircle->BorderOff();
-	//startCircle->Off();
-	startCircle->On();
+	startCircle->Off();
+	//startCircle->On();
 	std::cerr << "Start Circle: " << startCircle->GetX() << " , " << startCircle->GetY() << " : " << startCircle->drawState() << std::endl;
 	
 
@@ -622,8 +625,8 @@ bool init()
 		std::cerr << "Player = 0"  << std::endl;
 	}
 
-	player->On();
-	//player->Off();
+	//player->On();
+	player->Off();
 
 
 	//load sound files
@@ -665,6 +668,11 @@ bool init()
 	redotext->Off();
 	recordtext = Image::ImageText(recordtext, "Recording...","arial.ttf", 12, textColor);
 	recordtext->Off();
+	mousetext = Image::ImageText(mousetext, "Trackers not found! Mouse-emulation mode.","arial.ttf", 12, textColor);
+	if (trackstatus > 0)
+		mousetext->Off();
+	else
+		mousetext->On();
 
 	//set up trial number text image
 	trialnum = Image::ImageText(trialnum,"0_0","arial.ttf", 12,textColor);
@@ -736,6 +744,7 @@ void clean_up()
 	delete recordtext;
 	delete proceedtext;
 	delete returntext;
+	delete mousetext;
 
 	//std::cerr << "Deleted all objects." << std::endl;
 
@@ -797,11 +806,12 @@ static void draw_screen()
 	holdtext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
 	returntext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*1.0f/2.0f);
 
-	trialinstructtext->DrawAlign(PHYSICAL_WIDTH*1.0f/24.0f,PHYSICAL_HEIGHT*1.0f/24.0f,3);
-	redotext->DrawAlign(PHYSICAL_WIDTH*1.0f/24.0f,PHYSICAL_HEIGHT*1.0f/24.0f,3);
-	recordtext->DrawAlign(PHYSICAL_WIDTH*1.0f/24.0f,PHYSICAL_HEIGHT*1.0f/24.0f,3);
+	trialinstructtext->DrawAlign(PHYSICAL_WIDTH*0.5f/24.0f,PHYSICAL_HEIGHT*0.5f/24.0f,3);
+	redotext->DrawAlign(PHYSICAL_WIDTH*0.5f/24.0f,PHYSICAL_HEIGHT*0.5f/24.0f,3);
+	recordtext->DrawAlign(PHYSICAL_WIDTH*0.5f/24.0f,PHYSICAL_HEIGHT*0.5f/24.0f,3);
+	mousetext->DrawAlign(PHYSICAL_WIDTH*23.5f/24.0f,PHYSICAL_HEIGHT*23.5f/24.0f,1);
 	//write the trial number
-	trialnum->Draw(PHYSICAL_WIDTH*23.0f/24.0f, PHYSICAL_HEIGHT*1.0f/24.0f);
+	trialnum->Draw(PHYSICAL_WIDTH*23.0f/24.0f, PHYSICAL_HEIGHT*0.5f/24.0f);
 
 	SDL_GL_SwapWindow(screen);
 	glFlush();
@@ -850,7 +860,7 @@ void game_update()
 		recordtext->Off();
 		proceedtext->On();
 
-		startCircle->On();
+		//startCircle->On();
 
 		if (ftdiActive)
 		{
