@@ -65,6 +65,7 @@ Circle* startCircle = NULL;  //circle to keep track of the "home" position
 //Circle* handCircle = NULL;
 Object2D* items[NIMAGES];
 Object2D* instructimages[NINSTRUCT];
+Region2D blackRegion;
 Image* endtext = NULL;
 Image* readytext = NULL;
 Image* trialinstructtext = NULL;
@@ -77,10 +78,12 @@ Image* proceedtext = NULL;
 Image* returntext = NULL;
 Image* mousetext = NULL;
 Sound* startbeep = NULL;
+Sound* stopbeep = NULL;
 Sound* scorebeep = NULL;
 Sound* errorbeep = NULL;
 Sound* itemsounds[NIMAGES];
 SDL_Color textColor = {0, 0, 0, 1};
+SDL_Color textGrayColor = {128, 128, 128, 255};
 DataWriter* writer = NULL;
 GameState state;
 Timer* trialTimer;
@@ -519,6 +522,14 @@ bool init()
 	std::cerr << "Start Circle: " << startCircle->GetX() << " , " << startCircle->GetY() << " : " << startCircle->drawState() << std::endl;
 	
 
+	//set up screen blackout rectangle
+	blackRegion.SetNSides(4);
+	blackRegion.SetCenteredRectDims(PHYSICAL_WIDTH,PHYSICAL_HEIGHT);
+	blackRegion.SetRegionCenter(PHYSICAL_WIDTH/2,PHYSICAL_HEIGHT/2);
+	blackRegion.SetRegionColor(blkColor);
+	blackRegion.SetBorderColor(blkColor);
+	blackRegion.BorderOff();
+	blackRegion.Off();
 
 
 	//initialize the LCD glasses control lines
@@ -599,7 +610,6 @@ bool init()
 	recordData = false;
 
 
-
 	// set up the cursors
 	if (trackstatus > 0)
 	{
@@ -631,6 +641,7 @@ bool init()
 
 	//load sound files
 	startbeep = new Sound("Resources/startbeep.wav");
+	stopbeep = new Sound("Resources/beep.wav");
 	scorebeep = new Sound("Resources/coin.wav");
 	errorbeep = new Sound("Resources/errorbeep1.wav");
 
@@ -653,7 +664,7 @@ bool init()
 
 	readytext = Image::ImageText(readytext, "Get ready...","arial.ttf", 28, textColor);
 	readytext->Off();
-	stoptext = Image::ImageText(stoptext, "STOP!","arial.ttf", 32, textColor);
+	stoptext = Image::ImageText(stoptext, "STOP!","arial.ttf", 32, textGrayColor);
 	stoptext->Off();
 	holdtext = Image::ImageText(holdtext, "Wait until the go signal!","arial.ttf", 28, textColor);
 	holdtext->Off();
@@ -662,20 +673,20 @@ bool init()
 	returntext = Image::ImageText(returntext, "Please return to start position.","arial.ttf", 28, textColor);
 	returntext->Off();
 
-	trialinstructtext = Image::ImageText(trialinstructtext, "Press (space) to advance or (r) to repeat trial.","arial.ttf", 12, textColor);
+	trialinstructtext = Image::ImageText(trialinstructtext, "Press (space) to advance or (r) to repeat trial.","arial.ttf", 12, textGrayColor);
 	trialinstructtext->Off();
-	redotext = Image::ImageText(redotext, "Press (r) to repeat trial.","arial.ttf", 12, textColor);
+	redotext = Image::ImageText(redotext, "Press (r) to repeat trial.","arial.ttf", 12, textGrayColor);
 	redotext->Off();
-	recordtext = Image::ImageText(recordtext, "Recording...","arial.ttf", 12, textColor);
+	recordtext = Image::ImageText(recordtext, "Recording...","arial.ttf", 12, textGrayColor);
 	recordtext->Off();
-	mousetext = Image::ImageText(mousetext, "Trackers not found! Mouse-emulation mode.","arial.ttf", 12, textColor);
+	mousetext = Image::ImageText(mousetext, "Trackers not found! Mouse-emulation mode.","arial.ttf", 12, textGrayColor);
 	if (trackstatus > 0)
 		mousetext->Off();
 	else
 		mousetext->On();
 
 	//set up trial number text image
-	trialnum = Image::ImageText(trialnum,"0_0","arial.ttf", 12,textColor);
+	trialnum = Image::ImageText(trialnum,"0_0","arial.ttf", 12,textGrayColor);
 	trialnum->On();
 
 	hoverTimer = new Timer();
@@ -790,6 +801,8 @@ static void draw_screen()
 			Target.instruct = a;
 	}
 
+	blackRegion.Draw();
+
 	startCircle->Draw();
 	//if (startCircle->drawState())
 		//std::cerr << " Start circle drawn at " << startCircle->GetX() << " , " << startCircle->GetY() << std::endl;
@@ -822,6 +835,7 @@ static void draw_screen()
 //game update loop - state machine controlling the status of the experiment
 bool mvtStarted = false;
 bool falsestart = false;
+bool cuestop = false;
 
 bool reachedvelmin = false;
 bool reachedvelmax = false;
@@ -859,6 +873,8 @@ void game_update()
 		holdtext->Off();
 		recordtext->Off();
 		proceedtext->On();
+
+		blackRegion.Off();
 
 		//startCircle->On();
 
@@ -951,6 +967,8 @@ void game_update()
 		returntext->Off();
 		Target.item = -1;
 
+		blackRegion.Off();
+
 		//show "pause" text, and instructions to experimenter at the bottom of the screen
 		readytext->On();
 		holdtext->Off();
@@ -959,6 +977,7 @@ void game_update()
 			readytext->Off();
 			holdtext->On();
 		}
+		cuestop = false;
 
 		//recordtext->Off();
 
@@ -1029,7 +1048,7 @@ void game_update()
 				savfname = savfname.replace(savfname.rfind(".txt"),4,"");  //cut off the file extension
 				std::stringstream datafname;
 				//datafname << savfname.c_str() << "_" << SUBJECT_ID << "_Item" << curtr.item << "-" << numredos+1 << "_" << (curtr.vision == 1 ? "VF" : "NVF");
-				datafname << savfname.c_str() << "_" << SUBJECT_ID << "_Item" << curtr.item << "-" << numredos+1;
+				datafname << DATAPATH << savfname.c_str() << "_" << SUBJECT_ID << "_Item" << curtr.item << "-" << numredos+1;
 
 				writer = new DataWriter(&sysconfig,Target,datafname.str().c_str());  //create the data-output file
 
@@ -1120,6 +1139,8 @@ void game_update()
 					Target.lensstatus[0] = -99;
 					Target.lensstatus[1] = -99;
 				}
+
+				blackRegion.On();
 			}
 
 
@@ -1174,8 +1195,12 @@ void game_update()
 			mvmtEnded = false;  //just kidding, the movement is still going...
 
 		//if trial duration is exceeded, display a "stop" signal but do not change state until experimenter propmts
-		if (!nextstateflag && (trialTimer->Elapsed() > TRIAL_DURATION) )
+		if (!nextstateflag && !cuestop && (trialTimer->Elapsed() > TRIAL_DURATION) )
+		{
 			stoptext->On();
+			stopbeep->Play();
+			cuestop = true;
+		}
 
 		//if the experimenter ends the trial
 		if (nextstateflag)
@@ -1208,6 +1233,8 @@ void game_update()
 				Target.lensstatus[0] = -99;
 				Target.lensstatus[1] = -99;
 			}
+
+			blackRegion.Off();
 
 			returntostart = false;
 

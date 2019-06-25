@@ -11,9 +11,23 @@ No visual feedback (blinded condition)
 You will start with the practice tables in the folder, beginning with the visual-feedback table and then the no-visual-feedback table.
 
 Then for each participant you will run 4 tables:
+
 listA_VF
+listB_NVF
 listA_NVF
 listB_VF
-listB_NVF
-Check with Cortney to figure out the order of these tables.
 
+OR
+
+listB_VF
+listA_NVF
+listB_NVF
+listA_VF
+
+The order in terms of visul feedback will always be:
+VF
+NVF
+NVF
+VF
+
+The order in terms of list A and B will always be staggered so that you never run two of the same letter lists back to back.

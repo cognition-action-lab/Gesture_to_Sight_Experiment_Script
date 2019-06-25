@@ -1,6 +1,8 @@
 Debug/*
 !Debug/*.dll
 setup_resources/install_files
+FTDI/old_driver
+FTDI/*.zip
 ipch/
 Release/
 main_*

@@ -9,12 +9,13 @@
 //set this to the data path in which the current set of data for this block should be stored.
 
 //set the subject number
-#define SUBJECT_ID 999
+#define SUBJECT_ID "77777"
 
 //define the file that contains the name of the trial table
-#define TRIALFILE "./TrialTables/pair1/practice1_NVF.txt"  
+#define TRIALFILE "./TrialTables/pair5/practice5_NVF.txt"  
 
-
+//define the folder where the data will go (this folder must exist!)
+#define DATAPATH "C:/Users/MRRI/Desktop/nabdata/"
 
 
 //define paths
@@ -54,7 +55,8 @@
 #define FILTER_WIDE true
 #define FILTER_NARROW false
 #define FILTER_DC 1.0f
-#define HEMIFIELD BOTTOM
+#define HEMIFIELD FRONT
+#define RANGE 72.0f
 #define DOSYNC true
 
 

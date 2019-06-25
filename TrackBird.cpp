@@ -119,10 +119,12 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		int i;
 		int j;
 
-		sysconfig->datatype = DOUBLE_POSITION_MATRIX_TIME_Q;
+		//sysconfig->datatype = DOUBLE_POSITION_MATRIX_TIME_Q;
+		sysconfig->datatype = DOUBLE_ALL_TIME_STAMP_Q;
 		//sysconfig->reportRate = 3;
 
 		sysconfig->hemifield = HEMIFIELD;
+		sysconfig->maxRange = RANGE;
 
 		sysconfig->dosynch = DOSYNC;
 
@@ -191,6 +193,15 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		}
 		GetSystemParameter(METRIC, &sysconfig->metric, sizeof(sysconfig->metric));
 		std::cerr << "trakSTAR Units Metric: " << sysconfig->metric <<std::endl;
+
+		errorCode = SetSystemParameter(MAXIMUM_RANGE, &sysconfig->maxRange, sizeof(sysconfig->maxRange));
+		if (errorCode != BIRD_ERROR_SUCCESS)
+		{
+			GetErrorText(errorCode, perrbuff, sizeof(errorbuffer), SIMPLE_MESSAGE);
+			std::cerr << "trakSTAR Max Range Error: " << errorbuffer << std::endl;  // << std::endl;
+		}
+		GetSystemParameter(MAXIMUM_RANGE, &sysconfig->maxRange, sizeof(sysconfig->maxRange));
+		std::cerr << "trakSTAR Max Range: " << sysconfig->maxRange <<std::endl;
 
 		GetBIRDSystemConfiguration(&trakSysConfig);
 
@@ -407,7 +418,8 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 	}
 	else  //trakSTAR system, poll for sample
 	{
-		DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data[BIRDCOUNT], *pbird_data = &bird_data[0];
+		//DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data[BIRDCOUNT], *pbird_data = &bird_data[0];
+		DOUBLE_ALL_TIME_STAMP_Q_RECORD bird_data[BIRDCOUNT], *pbird_data = &bird_data[0];
 		int errorCode;
 		
 		//We request data from all sensors (available and disconnected) to be returned. We can do this synchronously using the REPORT_RATE value, or asychronously.
@@ -457,6 +469,10 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 					{
 						DataBirdFrame[j].anglematrix[k][m] = bird_data[j-1].s[k][m];
 					}
+
+				DataBirdFrame[j].azimuth = bird_data[j-1].a;			// azimuth
+				DataBirdFrame[j].elevation = bird_data[j-1].e;			// elevation
+				DataBirdFrame[j].roll = bird_data[j-1].r;			// roll
 
 				DataBirdFrame[j].quality = bird_data[j-1].quality;
 
@@ -518,6 +534,26 @@ bool TrackBird::ShutDownBird(TrackSYSCONFIG *sysconfig)
 	{
 		int t_id = -1;
 		errorCode = SetSystemParameter(SELECT_TRANSMITTER, &t_id, sizeof(t_id));  //Shut off the transmitter
+
+		/*
+		USHORT xmtrid;
+		for(xmtrid=0;xmtrid<sysconfig->systemconfig.numberTransmitters;xmtrid++)
+		{
+			if (sysconfig->Xmtr[xmtrid].attached == true)
+			{
+				sysconfig->xmtrloc = xmtrid;
+				errorCode = SetSystemParameter(SELECT_TRANSMITTER, &xmtrid, sizeof(xmtrid));
+				if (errorCode != BIRD_ERROR_SUCCESS)
+					std::cerr << "Error: Transmitter " << xmtrid << " unable to be selected." << std::endl;
+				else //successfully found and specified a transmitter
+				{
+					std::cerr << "   Transmitter " << xmtrid << " selected." << std::endl;
+					break;
+				}
+			}
+		}
+		*/
+
 		if (errorCode != BIRD_ERROR_SUCCESS)
 			shutoff = false;
 		errorCode = CloseBIRDSystem();

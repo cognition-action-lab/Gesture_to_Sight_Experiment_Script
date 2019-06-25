@@ -15,7 +15,7 @@ struct TrackDATAFRAME
 	double z;		
 
 	double anglematrix[3][3]; 
-	double theta;
+	double roll;
 	double azimuth;
 	double elevation;
 

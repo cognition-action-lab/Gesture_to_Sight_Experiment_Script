@@ -56,6 +56,7 @@ struct TrackSYSCONFIG
 	double filter_dc;
 	ADAPTIVE_PARAMETERS alpha_parameters;
 	HEMISPHERE_TYPE hemifield;
+	double maxRange;
 	bool dosynch; //flag to querry whether to force a synchronous data stream or not
 
 	//FOB parameters
