@@ -16,3 +16,4 @@ matlab/*.asv
 *.user
 *.opensdf
 *log.txt
+*.xlsx
