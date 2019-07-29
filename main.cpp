@@ -543,7 +543,7 @@ bool init()
 	status = Ftdi::InitFtdi(devNum,&ftHandle,1,Mask);
 	std::cerr << "LCD Glasses (FTDI): " << status << std::endl;
 
-	//set all lines low = lenses clear. Set the line high to make the lens translucent
+	//set all lines low = lenses clear (signal passes through an inverter). Set the line low to make the lens translucent
 	Ftdi::SetFtdiBitBang(ftHandle,Mask,4,0);
 	Ftdi::SetFtdiBitBang(ftHandle,Mask,3,0);
 	Ftdi::SetFtdiBitBang(ftHandle,Mask,2,0);
@@ -883,7 +883,9 @@ void game_update()
 			UCHAR Mask = 0xff; 
 
 			//set the lines low to be clear
+			Ftdi::SetFtdiBitBang(ftHandle,Mask,4,0);
 			Ftdi::SetFtdiBitBang(ftHandle,Mask,3,0);
+			Ftdi::SetFtdiBitBang(ftHandle,Mask,2,0);
 			Ftdi::SetFtdiBitBang(ftHandle,Mask,1,0);
 			Target.lensstatus[0] = 1;
 			Target.lensstatus[1] = 1;
@@ -1220,7 +1222,7 @@ void game_update()
 			{
 				UCHAR Mask = 0xff; 
 
-				//set the lines high to be translucent
+				//set the lines low to be transparent
 				Ftdi::SetFtdiBitBang(ftHandle,Mask,4,0);
 				Ftdi::SetFtdiBitBang(ftHandle,Mask,3,0);
 				Ftdi::SetFtdiBitBang(ftHandle,Mask,2,0);
