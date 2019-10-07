@@ -9,10 +9,10 @@
 //set this to the data path in which the current set of data for this block should be stored.
 
 //set the subject number
-#define SUBJECT_ID "9999"
+#define SUBJECT_ID "015"
 
 //define the file that contains the name of the trial table
-#define TRIALFILE "./TrialTables/pair9/tbl9-2_listA_NVF.txt"  
+#define TRIALFILE "./TrialTables/pair5/tbl5-1_listB_VF.txt"  
 
 //define the folder where the data will go (this folder must exist!)
 #define DATAPATH "C:/Users/MRRI/Desktop/nabdata/"
@@ -61,14 +61,14 @@
 
 
 //screen dimensions
-//#define SCREEN_WIDTH  1920
-//#define SCREEN_HEIGHT  1080
-#define SCREEN_WIDTH  1600
-#define SCREEN_HEIGHT  900
+#define SCREEN_WIDTH  1920
+#define SCREEN_HEIGHT  1080
+//#define SCREEN_WIDTH  1600
+//#define SCREEN_HEIGHT  900
 
 // Physical dimensions of the screen in meters
-#define PHYSICAL_WIDTH  0.307
-#define PHYSICAL_HEIGHT  0.173
+#define PHYSICAL_WIDTH  0.478f
+#define PHYSICAL_HEIGHT  0.270f
 //#define PHYSICAL_HEIGHT  0.192
 
 #define IMAGEX SCREEN_WIDTH/2
