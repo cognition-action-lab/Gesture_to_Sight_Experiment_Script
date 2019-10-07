@@ -442,7 +442,10 @@ bool init()
 	else
 	{
 		glcontext = SDL_GL_CreateContext(screen);
-		std::cerr << "Screen built." << std::endl;
+		if (glcontext == NULL)
+			std::cerr << "Screen build error." << std::endl;
+		else
+			std::cerr << "Screen built." << std::endl;
 	}
 
 	SDL_GL_SetSwapInterval(0); //ask for immediate updates rather than syncing to vertical retrace
@@ -477,6 +480,13 @@ bool init()
 	// Load files and initialize pointers
 
 	Image* tgtimages[NIMAGES];
+
+	GLenum error;
+
+	if ((error = glGetError()) != GL_NO_ERROR)
+	{
+		std::cerr << "GL error. " << error << std::endl;
+	}
 
 	//load all the image files
 	for (a = 0; a < NIMAGES; a++)
@@ -668,7 +678,7 @@ bool init()
 	stoptext->Off();
 	holdtext = Image::ImageText(holdtext, "Wait until the go signal!","arial.ttf", 28, textColor);
 	holdtext->Off();
-	proceedtext = Image::ImageText(proceedtext, "Zero the tracker and proceed when ready.","arial.ttf", 28, textColor);
+	proceedtext = Image::ImageText(proceedtext, "Zero the tracker and proceed when ready.", "arial.ttf", 28, textColor);
 	proceedtext->Off();
 	returntext = Image::ImageText(returntext, "Please return to start position.","arial.ttf", 28, textColor);
 	returntext->Off();
@@ -705,6 +715,17 @@ bool init()
 
 static void setup_opengl()
 {
+	/*
+	GLenum error;
+
+	error = glGetError();
+
+	while (error != GL_NO_ERROR)
+	{
+		error = glGetError();
+	}
+	*/
+
 	glClearColor(1, 1, 1, 0);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -724,6 +745,12 @@ static void setup_opengl()
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POLYGON_SMOOTH);
 
+	/*
+	if ((error = glGetError()) != GL_NO_ERROR)
+	{
+		std::cerr << "setup_opengl error. " << error << std::endl;
+	}
+	*/
 }
 
 
@@ -796,7 +823,7 @@ static void draw_screen()
 	//draw the instructions specified
 	for (int a = 0; a < NINSTRUCT; a++)
 	{
-		instructimages[a]->Draw();
+		instructimages[a]->Draw(PHYSICAL_WIDTH*.85f, instructimages[a]->GetHeight()*((PHYSICAL_WIDTH*.85f)/float(instructimages[a]->GetWidth())));
 		if (instructimages[a]->DrawState())
 			Target.instruct = a;
 	}
