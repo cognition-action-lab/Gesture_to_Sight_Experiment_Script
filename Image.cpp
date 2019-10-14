@@ -27,7 +27,7 @@ Image::Image(SDL_Surface* surface, float ratio)
 	int w = pow(2, ceil(log(neww) / log(2))); // Round up to the nearest power of two
 
 
-	if (h > SCREEN_HEIGHT || w > SCREEN_WIDTH)
+	while (h > SCREEN_HEIGHT || w > SCREEN_WIDTH)
 	{
 		h = h / 2;
 		w = w / 2;

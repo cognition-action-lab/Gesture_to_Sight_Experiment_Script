@@ -140,6 +140,7 @@ TargetFrame Target;
 
 //varibles that let the experimenter control the experiment flow
 bool nextstateflag = false;
+bool skiptrialflag = false;
 bool redotrialflag = false;
 int numredos = 0;
 //int dotrialflag = 0;
@@ -242,6 +243,11 @@ int main(int argc, char* args[])
 					nextstateflag = true;
 					Target.key = 's';
 					//std::cerr << "Advance requested" << std::endl;
+				}
+				else if (event.key.keysym.sym == SDLK_s)
+				{
+					skiptrialflag = true;
+					Target.key = 'k';
 				}
 				else //if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 )
 				{
@@ -453,7 +459,7 @@ bool init()
 	setup_opengl();
 
 	//a = Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 512);  //initialize SDL_mixer
-	a = Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024);  //initialize SDL_mixer, may have to play with the chunksize parameter to tune this a bit
+	a = Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 512);  //initialize SDL_mixer, may have to play with the chunksize parameter to tune this a bit
 	if (a != 0)
 	{
 		std::cerr << "Audio failed to initialize." << std::endl;
@@ -683,9 +689,9 @@ bool init()
 	returntext = Image::ImageText(returntext, "Please return to start position.","arial.ttf", 28, textColor);
 	returntext->Off();
 
-	trialinstructtext = Image::ImageText(trialinstructtext, "Press (space) to advance or (r) to repeat trial.","arial.ttf", 12, textGrayColor);
+	trialinstructtext = Image::ImageText(trialinstructtext, "Press (space) to advance, (r) to repeat, (s) to skip trial.","arial.ttf", 12, textGrayColor);
 	trialinstructtext->Off();
-	redotext = Image::ImageText(redotext, "Press (r) to repeat trial.","arial.ttf", 12, textGrayColor);
+	redotext = Image::ImageText(redotext, "Press (r) to repeat, (s) to skip trial.","arial.ttf", 12, textGrayColor);
 	redotext->Off();
 	recordtext = Image::ImageText(recordtext, "Recording...","arial.ttf", 12, textGrayColor);
 	recordtext->Off();
@@ -967,7 +973,7 @@ void game_update()
 		if (hoverTimer->Elapsed() > 1000 && nextstateflag)
 		{
 			nextstateflag = false;
-
+			skiptrialflag = false;
 			redotrialflag = false;
 
 			instructimages[trtbl[0].practice*2+trtbl[0].vision]->Off();
@@ -976,6 +982,10 @@ void game_update()
 			mvtStarted = false;
 
 			//Target.trial = CurTrial+1;
+
+			std::stringstream texttn;
+			texttn << 0 << "_" << 0;  //CurTrial starts from 0, so we add 1 for convention.
+			trialnum = Image::ImageText(trialnum, texttn.str().c_str(), "arial.ttf", 12, textColor);
 
 			Target.key = ' ';
 
@@ -991,7 +1001,7 @@ void game_update()
 	case WaitStim:
 		//this state is just a "pause" state between trials.
 		
-		trialnum->Off();  //is it confusing that we show the "last" trial here, since we don't know if we want to redo or advance yet?
+		//trialnum->Off();  //is it confusing that we show the "last" trial here, since we don't know if we want to redo or advance yet?
 
 		returntext->Off();
 		Target.item = -1;
@@ -1015,14 +1025,38 @@ void game_update()
 		else
 			redotext->On();
 		
+		if (hoverTimer->Elapsed() > 1000 && skiptrialflag)
+		{
+			nextstateflag = false;
+			redotrialflag = false;
+			skiptrialflag = false;
+			falsestart = false;
+			numredos = 0;
+			CurTrial++;  //we started the experiment with CurTrial = -1, so now we are on the "next" trial (or first trial)
+			Target.trial = CurTrial + 1;
+			Target.redo = 0;
+			Target.visfdbk = -1;
+			Target.visfdbk = curtr.vision;
+			Target.item = curtr.item;
+			Target.key = ' ';
 
+			std::stringstream texttn;
+			texttn << CurTrial + 1 << "_" << numredos;  //CurTrial starts from 0, so we add 1 for convention.
+			trialnum = Image::ImageText(trialnum, texttn.str().c_str(), "arial.ttf", 12, textColor);
+			std::cerr << "Trial " << CurTrial << " skipped." << std::endl;
+
+			hoverTimer->Reset();
+		}
+		
 		if (hoverTimer->Elapsed() > 1000 && (nextstateflag || redotrialflag) )
 		{
 			
-			if (!falsestart && (nextstateflag || (redotrialflag && CurTrial < 0) )) //if accidentally hit "r" before the first trial, ignore this error!
+			if ((!falsestart && (nextstateflag || (redotrialflag && CurTrial < 0) ))) //if accidentally hit "r" before the first trial, ignore this error!
 			{
 				nextstateflag = false;
 				redotrialflag = false;
+				skiptrialflag = false;
+				falsestart = false;
 				numredos = 0;
 				CurTrial++;  //we started the experiment with CurTrial = -1, so now we are on the "next" trial (or first trial)
 				Target.trial = CurTrial+1;
@@ -1092,6 +1126,7 @@ void game_update()
 
 				mvtStarted = false;
 				mvmtEnded = false;
+				falsestart = false;
 				
 				//move to the next state
 				state = ShowStim;
@@ -1109,7 +1144,7 @@ void game_update()
 		//std::cerr << "Item: " << curtr.item-1 << " drawn." << std::endl;
 		//items[curtr.item-1]->On();
 
-		if (player->Distance(startCircle) > START_RADIUS)
+		if (!mvtStarted && player->Distance(startCircle) > START_RADIUS)
 		{	//detected movement too early; 
 			//std::cerr << "Player: " << player->GetX() << " , " << player->GetY() << " , " << player->GetZ() << std::endl;
 			//std::cerr << "Circle: " << startCircle->GetX() << " , " << startCircle->GetY() << " , " << startCircle->GetZ() << std::endl;
@@ -1118,9 +1153,10 @@ void game_update()
 			items[curtr.item-1]->Off();
 			holdtext->On();
 			hoverTimer->Reset();
+			//std::cerr << "False start: " << hoverTimer->Elapsed() << " scrn: " << items[curtr.item-1]->DrawState() << " " << holdtext->DrawState();
 		}
 
-		if (mvtStarted && !falsestart && (hoverTimer->Elapsed() > 1000) )  //moved too soon!
+		if (mvtStarted && !falsestart && (hoverTimer->Elapsed() > 500) )  //moved too soon!
 		{
 			//state = WaitStim;
 			returntext->On();
@@ -1129,6 +1165,7 @@ void game_update()
 			falsestart = true;
 			Target.key = ' ';
 			trialTimer->Reset();
+			//std::cerr << std::endl << "False start registered: " << hoverTimer->Elapsed() << " scrn: " << items[curtr.item - 1]->DrawState() << " " << holdtext->DrawState() << " " << returntext->DrawState();
 		}
 
 		if (falsestart && (player->Distance(startCircle) < START_RADIUS)) //(falsestart && (trialTimer->Elapsed() > 1000))

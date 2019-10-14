@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#pragma once
+#pragma once0  
 
 #include "SDL_opengl.h"
 
@@ -9,13 +9,13 @@
 //set this to the data path in which the current set of data for this block should be stored.
 
 //set the subject number
-#define SUBJECT_ID "015"
+#define SUBJECT_ID "test"
 
 //define the file that contains the name of the trial table
-#define TRIALFILE "./TrialTables/pair5/tbl5-1_listB_VF.txt"  
+#define TRIALFILE "./TrialTables/pair6/tbl6-1_listB_VF.txt"  
 
 //define the folder where the data will go (this folder must exist!)
-#define DATAPATH "C:/Users/MRRI/Desktop/nabdata/"
+#define DATAPATH "./nab_data/"
 
 
 //define paths
