@@ -106,6 +106,9 @@ DataWriter::~DataWriter()
  
 void DataWriter::Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target)
 {
+	std::streamsize ss;
+	ss = std::cout.precision();
+
 	// Write data
 	if (file.is_open())
 	{
@@ -116,6 +119,7 @@ void DataWriter::Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target)
 			<< Target.trial << " "
 			<< Target.redo << " "
 			<< Target.trace << " "
+			<< std::fixed << showpoint << std::setprecision(8) 
 			<< frame.x << " "
 			<< frame.y << " "
 			<< frame.z << " "
@@ -131,6 +135,7 @@ void DataWriter::Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target)
 			<< frame.anglematrix[2][0] << " "
 			<< frame.anglematrix[2][1] << " "
 			<< frame.anglematrix[2][2] << " "
+			<< std::resetiosflags( std::ios::fixed | std::ios::showpoint ) << std::setprecision(ss)
 			<< frame.vel << " "
 			<< Target.lat << " "
 			<< Target.dur << " "

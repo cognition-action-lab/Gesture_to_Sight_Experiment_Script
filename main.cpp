@@ -1082,7 +1082,7 @@ void game_update()
 		//std::cerr << "Item: " << curtr.item-1 << " drawn." << std::endl;
 		//items[curtr.item-1]->On();
 
-		if (player->Distance(startCircle) > START_RADIUS)
+		if (!mvtStarted && (player->Distance(startCircle) > START_RADIUS))
 		{	//detected movement too early; 
 			//std::cerr << "Player: " << player->GetX() << " , " << player->GetY() << " , " << player->GetZ() << std::endl;
 			//std::cerr << "Circle: " << startCircle->GetX() << " , " << startCircle->GetY() << " , " << startCircle->GetZ() << std::endl;
