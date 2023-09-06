@@ -9,10 +9,10 @@
 //set this to the data path in which the current set of data for this block should be stored.
 
 //set the subject number
-#define SUBJECT_ID "test"
+#define SUBJECT_ID "CL002"
 
 //define the file that contains the name of the trial table
-#define TRIALFILE "./TrialTables/pair1/practice1_NVF.txt"  
+#define TRIALFILE "./TrialTables/pair2/tbl2-1_listB_VF.txt"
 
 //define the folder where the data will go (this folder must exist!)
 #define DATAPATH "C:/Users/MRRI/Desktop/nabdata/"
@@ -20,7 +20,8 @@
 
 //define paths
 #define IMAGEPATH "./Resources/BN_Images"
-#define NIMAGES 45
+//define NIMAGES 45 (this is from the older version of the task that change in 2022)
+#define NIMAGES 43
 
 #define AUDIOPATH "./Resources/BN_Sounds"
 
