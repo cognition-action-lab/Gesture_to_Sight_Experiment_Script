@@ -50,6 +50,8 @@ enum GameState
 	ShowStim = 0x04,   //00100
 	Active = 0x06,     //00110
 	EndTrial = 0x08, //01000
+	Q1State = 0x0A,  //01010
+	Q2State = 0x0B,  //01011
 	Finished = 0x10    //10000
 };
 
@@ -65,6 +67,7 @@ Circle* startCircle = NULL;  //circle to keep track of the "home" position
 //Circle* handCircle = NULL;
 Object2D* items[NIMAGES];
 Object2D* instructimages[NINSTRUCT];
+Object2D* respprompt;
 Region2D blackRegion;
 Image* endtext = NULL;
 Image* readytext = NULL;
@@ -77,6 +80,8 @@ Image* recordtext = NULL;
 Image* proceedtext = NULL;
 Image* returntext = NULL;
 Image* mousetext = NULL;
+Image* q1text = NULL;
+Image* q2text = NULL;
 Sound* startbeep = NULL;
 Sound* stopbeep = NULL;
 Sound* scorebeep = NULL;
@@ -85,6 +90,7 @@ Sound* itemsounds[NIMAGES];
 SDL_Color textColor = {0, 0, 0, 1};
 SDL_Color textGrayColor = {128, 128, 128, 255};
 DataWriter* writer = NULL;
+DataWriter* qwriter = NULL;
 GameState state;
 Timer* trialTimer;
 Timer* hoverTimer;
@@ -141,6 +147,7 @@ TargetFrame Target;
 //varibles that let the experimenter control the experiment flow
 bool nextstateflag = false;
 bool redotrialflag = false;
+bool gotkey = false;
 int numredos = 0;
 //int dotrialflag = 0;
 
@@ -247,11 +254,13 @@ int main(int argc, char* args[])
 				{
 					Target.key = *SDL_GetKeyName(event.key.keysym.sym);  //(char)event.key.keysym.unicode;
 					//std::cerr << Target.flag << std::endl;
+					gotkey = true;
 				}
 			}
 			else if (event.type == SDL_KEYUP)
 			{
-				Target.key = '-1';
+				Target.key = ' ';
+				gotkey = false;
 			}
 			else if (event.type == SDL_QUIT)
 			{
@@ -685,6 +694,39 @@ bool init()
 	else
 		mousetext->On();
 
+	Image* rprompt;
+	rprompt = Image::LoadFromFile("./Resources/key_legend.png");
+	if (rprompt == NULL)
+		std::cerr << "Response Prompt did not load." << std::endl;
+	else {
+		respprompt = new Object2D(rprompt);
+		std::cerr << "Response prompt loaded." << std::endl;
+		respprompt->SetPos(PHYSICAL_WIDTH / 2, PHYSICAL_HEIGHT / 4);
+	}
+	//respprompt->Off();
+
+	q1text = Image::ImageText(q1text, "Did you make any mistakes when showing how to use the object?","arial.ttf", 28, textColor);
+	q1text->Off();
+
+	q2text = Image::ImageText(q2text, "Were you successful overall in showing how to use the object?","arial.ttf", 28, textColor);
+	q2text->Off();
+
+	//set up the new data file and start recording
+
+	std::string savfname;
+	savfname.assign(TRIALFILE);
+	savfname = savfname.substr(savfname.rfind("/")+1);  //cut off the file extension
+	savfname = savfname.replace(savfname.rfind(".txt"),4,"");  //cut off the file extension
+	std::stringstream datafname;
+
+	datafname << DATAPATH << savfname.c_str() << "_" << SUBJECT_ID << "_QnResponses";
+	
+	qwriter = new DataWriter(Target,datafname.str().c_str());  //create the data-output file
+
+	std::cerr << "Q Datawriter created." << std::endl;
+	
+
+
 	//set up trial number text image
 	trialnum = Image::ImageText(trialnum,"0_0","arial.ttf", 12,textGrayColor);
 	trialnum->On();
@@ -732,6 +774,8 @@ void clean_up()
 {
 	std::cout << "Shutting down." << std::endl;
 
+	qwriter->Close();
+
 	delete startbeep;
 	delete scorebeep;
 	delete errorbeep;
@@ -744,7 +788,8 @@ void clean_up()
 
 	for (int a = 0; a < NINSTRUCT; a++)
 		delete instructimages[a];
-	
+	delete respprompt;
+
 	delete endtext;
 	delete readytext;
 	delete trialinstructtext;
@@ -756,6 +801,8 @@ void clean_up()
 	delete proceedtext;
 	delete returntext;
 	delete mousetext;
+	delete q1text;
+	delete q2text;
 
 	//std::cerr << "Deleted all objects." << std::endl;
 
@@ -786,7 +833,7 @@ static void draw_screen()
 
 
 	//draw the image specified
-	Target.trace = -1;
+	//Target.trace = -1;
 	for (int a = 0; a < NIMAGES; a++)
 	{
 		items[a]->Draw();
@@ -800,6 +847,10 @@ static void draw_screen()
 		if (instructimages[a]->DrawState())
 			Target.instruct = a;
 	}
+
+	respprompt->Draw();
+	q1text->DrawAlign(float(PHYSICAL_WIDTH)/3.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
+	q2text->DrawAlign(float(PHYSICAL_WIDTH)/3.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
 
 	blackRegion.Draw();
 
@@ -850,6 +901,11 @@ bool returntostart = true;
 
 bool writefinalscore;
 
+bool didgotkey = false;
+bool qresponded = false;
+bool recordkey = false;
+bool qrecord = false;
+
 void game_update()
 {
 
@@ -865,6 +921,9 @@ void game_update()
 		Target.redo = -1;
 		Target.trial = -1;
 		Target.visfdbk = -1;
+		Target.resp1 = 'q';
+		Target.resp2 = 'q';
+
 
 		endtext->Off();
 		readytext->Off();
@@ -910,6 +969,7 @@ void game_update()
 		for (int a = 0; a < NINSTRUCT; a++)
 			instructimages[a]->Off();
 
+		respprompt->Off();
 
 		if( returntostart && nextstateflag)  //hand is in the home position and the experimenter asked to advance the experiment
 		{
@@ -1246,10 +1306,94 @@ void game_update()
 			recordtext->Off();
 			recordData = false;
 
-			//go to mext state
-			trialTimer->Reset();// = SDL_GetTicks();
-			state = EndTrial;
+			gotkey = false;
+			didgotkey = false;
+			qresponded = false;
+			recordkey = false;
+			qrecord = false;
+			q1text->On();
+			respprompt->On();
+			Target.resp1 = 'q';
+			Target.resp2 = 'q';
 
+
+			//go to next state
+			trialTimer->Reset();// = SDL_GetTicks();
+			//state = EndTrial;
+			state = Q1State;
+
+		}
+
+		break;
+
+
+	case Q1State:
+
+
+		if (qresponded && !gotkey && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			q2text->On();
+			respprompt->On();
+
+			state = Q2State;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.resp1 = Target.key;
+			q1text->Off();
+			respprompt->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
+	case Q2State:
+
+
+		if (qresponded && !gotkey && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			//we have responses for both questions, we will save that out
+			qrecord = true;
+			//qwriter->Record(Target);
+
+			state = EndTrial;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.resp2 = Target.key;
+			q2text->Off();
+			respprompt->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
 		}
 
 		break;
@@ -1258,6 +1402,11 @@ void game_update()
 
 		returntext->On();
 
+		if (qrecord)
+		{
+			qwriter->Record(Target);
+			qrecord = false;
+		}
 		if (player->Distance(startCircle) > START_RADIUS)
 			returntostart = false;
 		else
@@ -1267,7 +1416,10 @@ void game_update()
 		if (returntostart)
 		{
 			returntext->Off();
-			
+
+			Target.trace = -1;
+
+
 			nextstateflag = false;
 			std::cerr << "Ending Trial." << std::endl;
 			state = WaitStim;

@@ -23,6 +23,10 @@ struct TargetFrame
 	int lat;
 	int dur;
 
+	char resp1;
+	char resp2;
+	char resp3;
+
 };
 
 #endif

@@ -98,6 +98,68 @@ DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, TargetFrame Target, const char
 	}
 }
 
+
+DataWriter::DataWriter(TargetFrame Target, const char* filename)
+{
+
+	//record current date/time
+	time_t current_time = time(0);
+	tm* ltm = localtime(&current_time);
+	stringstream ss1, ss2, ss3;
+	
+	iswriting = 0;
+
+	ss1 << setw(4) << setfill('0') << ltm->tm_year + 1900;
+	ss1 << setw(2) << setfill('0') << ltm->tm_mon + 1;
+	ss1 << setw(2) << setfill('0') << ltm->tm_mday;
+	
+	ss2 << setw(2) << setfill('0') << ltm->tm_hour;
+	ss2 << setw(2) << setfill('0') << ltm->tm_min;
+	ss2 << setw(2) << setfill('0') << ltm->tm_sec;
+
+
+	// If no filename was supplied, use the date and time
+	if (filename == NULL)
+	{
+		ss3 << ss1.str() << "_" << ss2.str() << ".dat";
+		file.open(ss3.str(), ios::out);
+	}
+	else
+	{
+		//append timestamp to prevent overwrites
+		ss3 << filename << "_" << ss1.str() << ss2.str() << ".dat";
+		file.open(ss3.str(), ios::out);
+	}
+
+	// Write headers to file
+	if (file.is_open())
+	{
+
+		//write current date
+		file << "Date " << ss1.str() << endl;
+		file << "Time " << ss2.str() << endl;
+		//write trial parameters of interest
+		file << "SubjectID " << SUBJECT_ID << endl;
+
+		file << "--" << endl;
+		
+
+		file << "Trial "
+			 << "Redo "
+			 << "Item "
+			 << "Vision "
+			 << "Q1Resp "
+			 << "Q2Resp "
+			 << endl;
+
+		file << "-----" << endl;  //flag designator for finding start of the data stream.  everything above is header
+
+		iswriting = 1;
+
+	}
+}
+
+
 DataWriter::~DataWriter()
 {
 	iswriting = 0;
@@ -145,6 +207,26 @@ void DataWriter::Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target)
 			<< endl;
 	}
 }
+
+
+void DataWriter::Record(TargetFrame Target)
+{
+	std::streamsize ss;
+	ss = std::cout.precision();
+
+	// Write data
+	if (file.is_open())
+	{
+		file << Target.trial << " "
+			<< Target.redo << " "
+			<< Target.trace + 1 << " "
+			<< Target.visfdbk << " "
+			<< Target.resp1 << " "
+			<< Target.resp2
+			<< endl;
+	}
+}
+
 
 void DataWriter::Close()
 {

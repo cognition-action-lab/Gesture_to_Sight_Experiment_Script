@@ -18,6 +18,7 @@ public:
 	 * a name will be generated automatically.
 	 */
 	DataWriter(TrackSYSCONFIG *sysconfig, TargetFrame Target, const char* filename = NULL);
+	DataWriter(TargetFrame Target, const char* filename = NULL);
 	DataWriter();
 	~DataWriter();
 	// Record a new line of data
@@ -25,6 +26,9 @@ public:
 	// frame is the frame of input data
 	void Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target);
 	void Close();
+
+	void Record(TargetFrame Target);
+
 };
 
 #endif
