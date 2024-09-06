@@ -27,6 +27,13 @@ struct TargetFrame
 	char resp2;
 	char resp3;
 
+	char qpriorpresp;
+	char qpriorpcresp;
+	char qpostpresp;
+	char qpostpcresp;
+	char qrresp;
+	char qrcresp;
+
 };
 
 #endif

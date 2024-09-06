@@ -148,8 +148,15 @@ DataWriter::DataWriter(TargetFrame Target, const char* filename)
 			 << "Redo "
 			 << "Item "
 			 << "Vision "
-			 << "Q1Resp"
-			 << "Q2Resp "
+			 << "ErrQ1Resp"
+			 << "ErrQ2Resp "
+			 << "QPriorProResp "
+			 << "QPriorProConfResp "
+			 << "QRetroResp "
+			 << "QRetroConfResp "
+			 << "QPostProResp "
+			 << "QPostProConfResp "
+
 			 << endl;
 
 		file << "-----" << endl;  //flag designator for finding start of the data stream.  everything above is header
@@ -221,8 +228,14 @@ void DataWriter::Record(TargetFrame Target)
 			<< Target.redo << " "
 			<< Target.trace + 1 << " "
 			<< Target.visfdbk << " "
-			<< Target.resp1
-			<< Target.resp2
+			<< Target.resp1 << " "
+			<< Target.resp2 << " "
+			<< Target.qpriorpresp << " "
+			<< Target.qpriorpcresp << " "
+			<< Target.qrresp << " "
+			<< Target.qrcresp << " "
+			<< Target.qpostpresp << " "
+			<< Target.qpostpcresp
 			<< endl;
 	}
 }

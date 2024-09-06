@@ -47,11 +47,17 @@ enum GameState
 	Idle = 0x01,       //00001
 	Instruct = 0x02,   //00010
 	WaitStim = 0x03,   //00011
+	QPriorPState = 0x13,   //10011
+	QPriorPCState = 0x14,  //10100
 	ShowStim = 0x04,   //00100
 	Active = 0x06,     //00110
 	EndTrial = 0x08, //01000
+	QRState = 0x18,  //11000
+	QRCState = 0x19, //11001
 	Q1State = 0x0A,  //01010
 	Q2State = 0x0B,  //01011
+	QPostPState = 0x1B, //11011
+	QPostPCState = 0x1C, //11100
 	Finished = 0x10    //10000
 };
 
@@ -68,9 +74,12 @@ Circle* startCircle = NULL;  //circle to keep track of the "home" position
 Object2D* items[NIMAGES];
 Object2D* instructimages[NINSTRUCT];
 Object2D* respprompt;
+Object2D* likertability;
+Object2D* likertconfidence;
 Region2D blackRegion;
 Image* endtext = NULL;
 Image* readytext = NULL;
+Image* gotext = NULL;
 Image* trialinstructtext = NULL;
 Image* stoptext = NULL;
 Image* holdtext = NULL;
@@ -82,6 +91,10 @@ Image* returntext = NULL;
 Image* mousetext = NULL;
 Image* q1text = NULL;
 Image* q2text = NULL;
+Image* qpriorptext = NULL;
+Image* qctext = NULL;
+Image* qpostptext = NULL;
+Image* qrtext = NULL;
 Sound* startbeep = NULL;
 Sound* stopbeep = NULL;
 Sound* scorebeep = NULL;
@@ -254,6 +267,13 @@ int main(int argc, char* args[])
 					keyup = false;
 				}
 				else if (event.key.keysym.sym == SDLK_z || event.key.keysym.sym == SDLK_x) //if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 )
+				{
+					Target.key = *SDL_GetKeyName(event.key.keysym.sym);  //(char)event.key.keysym.unicode;
+					//std::cerr << Target.flag << std::endl;
+					gotkey = true;
+					keyup = false;
+				}
+				else if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_4 || event.key.keysym.sym == SDLK_5 || event.key.keysym.sym == SDLK_6 || event.key.keysym.sym == SDLK_7)
 				{
 					Target.key = *SDL_GetKeyName(event.key.keysym.sym);  //(char)event.key.keysym.unicode;
 					//std::cerr << Target.flag << std::endl;
@@ -529,6 +549,33 @@ bool init()
 		}
 	}
 
+	Image* likertabil;
+	sprintf(tmpstr,"%s/likertability.png",INSTRUCTPATH,a);
+	likertabil = Image::LoadFromFile(tmpstr);
+	if (likertabil == NULL)
+		std::cerr << "Likert Ability image failed to load" << std::endl;
+	else
+	{
+		likertability = new Object2D(likertabil);
+		std::cerr << "Likert Ability image loaded." << std::endl;
+		likertability->SetPos(float(PHYSICAL_WIDTH)/2,float(PHYSICAL_HEIGHT)*5.0f/6.0f);
+		likertability->Off();
+	}
+
+	Image* likertconf;
+	sprintf(tmpstr,"%s/likertconfidence.png",INSTRUCTPATH,a);
+	likertconf = Image::LoadFromFile(tmpstr);
+	if (likertconf == NULL)
+		std::cerr << "Likert Confidence image failed to load" << std::endl;
+	else
+	{
+		likertconfidence = new Object2D(likertconf);
+		std::cerr << "Likert Confidence image loaded." << std::endl;
+		likertconfidence->SetPos(float(PHYSICAL_WIDTH)/2,float(PHYSICAL_HEIGHT)*5.0f/6.0f);
+		likertconfidence->Off();
+	}
+
+
 	std::cerr << "Images loaded." << std::endl;
 
 
@@ -684,6 +731,8 @@ bool init()
 
 	readytext = Image::ImageText(readytext, "Get ready...","arial.ttf", 28, textColor);
 	readytext->Off();
+	gotext = Image::ImageText(readytext, "Go!","arial.ttf", 28, textColor);
+	gotext->Off();
 	stoptext = Image::ImageText(stoptext, "STOP!","arial.ttf", 32, textGrayColor);
 	stoptext->Off();
 	holdtext = Image::ImageText(holdtext, "Wait until the go signal!","arial.ttf", 28, textColor);
@@ -712,7 +761,7 @@ bool init()
 	else {
 		respprompt = new Object2D(rprompt);
 		std::cerr << "Response prompt loaded." << std::endl;
-		respprompt->SetPos(PHYSICAL_WIDTH / 2, PHYSICAL_HEIGHT / 4);
+		respprompt->SetPos(PHYSICAL_WIDTH / 2, PHYSICAL_HEIGHT*5.0f/6.0f);
 	}
 	//respprompt->Off();
 
@@ -722,6 +771,21 @@ bool init()
 	q2text = Image::ImageText(q2text, "Did you correctly show how to use this object?","arial.ttf", 28, textColor);
 	//q2text = Image::ImageText(q2text, "Were you successful overall in showing how to use the object?","arial.ttf", 28, textColor);
 	q2text->Off();
+
+
+	qpriorptext = Image::ImageText(qpriorptext, "How well will you be able to show how to use this object?","arial.ttf", 28, textColor);
+	qpriorptext->Off();
+
+	qctext = Image::ImageText(qctext, "How confident are you in that rating?","arial.ttf", 28, textColor);
+	qctext->Off();
+
+	qrtext = Image::ImageText(qrtext, "How well did you show how to use the object?","arial.ttf", 28, textColor);
+	qrtext->Off();
+
+	qpostptext = Image::ImageText(qpostptext, "If you are asked to show how to use this object in the future, how well would you be able to do that?","arial.ttf", 28, textColor);
+	qpostptext->Off();
+
+
 
 	//set up the new data file and start recording
 
@@ -802,6 +866,10 @@ void clean_up()
 		delete instructimages[a];
 	delete respprompt;
 
+	delete likertability;
+	delete likertconfidence;
+
+
 	delete endtext;
 	delete readytext;
 	delete trialinstructtext;
@@ -814,7 +882,7 @@ void clean_up()
 	delete returntext;
 	delete mousetext;
 	delete q1text;
-	//delete q2text;
+	delete q2text;
 
 	//std::cerr << "Deleted all objects." << std::endl;
 
@@ -860,9 +928,17 @@ static void draw_screen()
 			Target.instruct = a;
 	}
 
-	respprompt->Draw();
-	q1text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
-	q2text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
+	likertability->Draw(PHYSICAL_WIDTH/3,PHYSICAL_HEIGHT/11);
+	likertconfidence->Draw(PHYSICAL_WIDTH/3,PHYSICAL_HEIGHT/11);
+
+	respprompt->Draw(); //(PHYSICAL_WIDTH/2,PHYSICAL_HEIGHT/10);
+	qpriorptext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f);
+	qpostptext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f);
+	qrtext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f);
+	qctext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f);
+
+	q1text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f,3);
+	q2text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*5.0f/6.0f+float(PHYSICAL_HEIGHT)/12.0f,3);
 
 	blackRegion.Draw();
 
@@ -878,6 +954,7 @@ static void draw_screen()
 
 	proceedtext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
 	readytext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
+	gotext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
 	stoptext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
 	holdtext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*2.0f/3.0f);
 	returntext->Draw(float(PHYSICAL_WIDTH)/2.0f,float(PHYSICAL_HEIGHT)*1.0f/2.0f);
@@ -1138,13 +1215,112 @@ void game_update()
 				mvtStarted = false;
 				mvmtEnded = false;
 				
+
+				//set up variables for prior question state
+				qpriorptext->On();
+				likertability->On();
+				gotkey = false;
+				didgotkey = false;
+				qresponded = false;
+				recordkey = false;
+				qrecord = false;
+				Target.qpriorpresp = 'q';
+				Target.qpriorpcresp = 'q';
+				Target.qrresp = 'q';
+				Target.qrcresp = 'q';
+				Target.qpostpresp = 'q';
+				Target.qpostpcresp = 'q';
+
 				//move to the next state
-				state = ShowStim;
+				//state = ShowStim;
+				state = QPriorPState;
 				std::cerr << "Leaving WAITSTATE state." << std::endl;
 
 			}
 
 		}
+		break;
+
+	case QPriorPState:
+		//show stimulus and prompt prior prospective belief question
+
+		//std::cerr << "Item: " << curtr.item-1 << " drawn." << std::endl;
+		//items[curtr.item-1]->On();
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			qctext->On();
+			likertconfidence->On();
+			state = QPriorPCState ;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qpriorpresp = Target.key;
+			qpriorptext->Off();
+			likertability->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
+
+	case QPriorPCState:
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			//reset the trial timers
+			hoverTimer->Reset();
+			trialTimer->Reset();
+
+			//move to active state or end state
+			if (DOQUESTIONSONLY)
+			{
+				qrecord = true;
+				state = EndTrial;
+			}
+			else
+				state = ShowStim;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qpriorpcresp = Target.key;
+			qctext->Off();
+			likertconfidence->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
 		break;
 
 
@@ -1323,20 +1499,106 @@ void game_update()
 			qresponded = false;
 			recordkey = false;
 			qrecord = false;
-			q1text->On();
-			respprompt->On();
-			Target.resp1 = 'q';
-			Target.resp2 = 'q';
+			//q1text->On();
+			//respprompt->On();
+			//Target.resp1 = 'q';
+			//Target.resp2 = 'q';
+			qrtext->On();
+			likertability->On();
 
+			items[curtr.item-1]->On();
 
 			//go to next state
 			trialTimer->Reset();// = SDL_GetTicks();
 			//state = EndTrial;
-			state = Q1State;
+			//state = Q1State;
+			state = QRState;
 
 		}
 
 		break;
+
+
+	case QRState:
+		//show stimulus and prompt retrospective belief question
+
+		//std::cerr << "Item: " << curtr.item-1 << " drawn." << std::endl;
+		//items[curtr.item-1]->On();
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			qctext->On();
+			likertconfidence->On();
+			state = QRCState ;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qrresp = Target.key;
+			qrtext->Off();
+			likertability->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
+
+	case QRCState:
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			//reset the trial timers
+			hoverTimer->Reset();
+			trialTimer->Reset();
+
+			q1text->On();
+			respprompt->On();
+
+
+			//move to active state or end state
+			state = Q1State;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qrcresp = Target.key;
+			qctext->Off();
+			likertconfidence->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
 
 
 	case Q1State:
@@ -1352,7 +1614,7 @@ void game_update()
 			didgotkey = false;
 
 			//we have responses for both questions, we will save that out
-			qrecord = true;
+			//qrecord = true;
 
 			q2text->On();
 			respprompt->On();
@@ -1390,10 +1652,13 @@ void game_update()
 			didgotkey = false;
 
 			//we have responses for both questions, we will save that out
-			qrecord = true;
+			//qrecord = true;
 			//qwriter->Record(Target);
 
-			state = EndTrial;
+			qpostptext->On();
+			likertability->On();
+
+			state = QPostPState;
 		}
 
 
@@ -1413,9 +1678,96 @@ void game_update()
 
 		break;
 
+
+	case QPostPState:
+		//show stimulus and prompt retrospective belief question
+
+		//std::cerr << "Item: " << curtr.item-1 << " drawn." << std::endl;
+		//items[curtr.item-1]->On();
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			qctext->On();
+			likertconfidence->On();
+			state = QPostPCState ;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qpostpresp = Target.key;
+			qpostptext->Off();
+			likertability->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
+
+	case QPostPCState:
+
+
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
+		{
+			Target.key = ' ';
+			trialTimer->Reset();// = SDL_GetTicks();
+			qresponded = false;
+			recordkey = false;
+			gotkey = false;
+			didgotkey = false;
+
+			//we have responses for all questions, we will save that out
+			qrecord = true;
+			//qwriter->Record(Target);
+
+			items[curtr.item-1]->Off();
+
+			//reset the trial timers
+			hoverTimer->Reset();
+			trialTimer->Reset();
+
+			//move to active state or end state
+			state = EndTrial;
+		}
+
+
+		if (gotkey && !didgotkey && (trialTimer->Elapsed() > 200))
+		{
+			Target.qpostpcresp = Target.key;
+			qctext->Off();
+			likertconfidence->Off();
+			qresponded = true;
+			didgotkey = true;
+		}
+		else if (gotkey && didgotkey)
+		{
+			//keep clearing this flag; this lets us check for when the key is no longer pressed
+			gotkey = false;
+		}
+
+		break;
+
+
+
+
 	case EndTrial:
 
 		returntext->On();
+		items[curtr.item-1]->Off();
 
 		if (qrecord)
 		{

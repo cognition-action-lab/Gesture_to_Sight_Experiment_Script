@@ -9,13 +9,16 @@
 //set this to the data path in which the current set of data for this block should be stored.
 
 //set the subject number
-#define SUBJECT_ID "ST027"
+#define SUBJECT_ID "ST9999"
 
 //define the file that contains the name of the trial table
 #define TRIALFILE "C:/Users/MRRI/Desktop/nab/TrialTables/pair1/tbl1-2_listA_VF.txt"
 //./TrialTables/pair8/practice8_VF
 //define the folder where the data will go (this folder must exist!)
 #define DATAPATH "C:/Users/MRRI/Desktop/nabdata/"
+
+//define if just doing the belief questions or also the production phase
+#define DOQUESTIONSONLY 1
 
 
 //define paths
