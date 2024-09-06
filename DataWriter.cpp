@@ -148,7 +148,7 @@ DataWriter::DataWriter(TargetFrame Target, const char* filename)
 			 << "Redo "
 			 << "Item "
 			 << "Vision "
-			 << "Q1Resp "
+			 << "Q1Resp"
 			 << "Q2Resp "
 			 << endl;
 
@@ -221,7 +221,7 @@ void DataWriter::Record(TargetFrame Target)
 			<< Target.redo << " "
 			<< Target.trace + 1 << " "
 			<< Target.visfdbk << " "
-			<< Target.resp1 << " "
+			<< Target.resp1
 			<< Target.resp2
 			<< endl;
 	}

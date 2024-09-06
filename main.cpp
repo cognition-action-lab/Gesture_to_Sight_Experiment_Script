@@ -148,6 +148,7 @@ TargetFrame Target;
 bool nextstateflag = false;
 bool redotrialflag = false;
 bool gotkey = false;
+bool keyup = false;
 int numredos = 0;
 //int dotrialflag = 0;
 
@@ -228,12 +229,13 @@ int main(int argc, char* args[])
 					flagoffsetkey = 1;
 					Target.key = '0';
 					//std::cerr << "Zero requested" << std::endl;
+					keyup = false;
 				}
 				else if (event.key.keysym.sym == SDLK_r)
 				{
 					redotrialflag = true;
 					Target.key = 'r';
-
+					keyup = false;
 					//std::cerr << "Redo requested" << std::endl;
 				}
 				/*
@@ -249,18 +251,27 @@ int main(int argc, char* args[])
 					nextstateflag = true;
 					Target.key = 's';
 					//std::cerr << "Advance requested" << std::endl;
+					keyup = false;
+				}
+				else if (event.key.keysym.sym == SDLK_z || event.key.keysym.sym == SDLK_x) //if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 )
+				{
+					Target.key = *SDL_GetKeyName(event.key.keysym.sym);  //(char)event.key.keysym.unicode;
+					//std::cerr << Target.flag << std::endl;
+					gotkey = true;
+					keyup = false;
 				}
 				else //if( event.key.keysym.unicode < 0x80 && event.key.keysym.unicode > 0 )
 				{
 					Target.key = *SDL_GetKeyName(event.key.keysym.sym);  //(char)event.key.keysym.unicode;
 					//std::cerr << Target.flag << std::endl;
-					gotkey = true;
+					keyup = false;
 				}
 			}
 			else if (event.type == SDL_KEYUP)
 			{
 				Target.key = ' ';
-				gotkey = false;
+				//gotkey = false;
+				keyup = true;
 			}
 			else if (event.type == SDL_QUIT)
 			{
@@ -407,7 +418,7 @@ bool init()
 
 	int a;
 	char tmpstr[80];
-	char fname[50] = TRIALFILE;
+	char fname[80] = TRIALFILE;
 	//char dataPath[50] = DATA_OUTPUT_PATH;
 
 	//std::cerr << "Start init." << std::endl;
@@ -708,7 +719,8 @@ bool init()
 	q1text = Image::ImageText(q1text, "Did you make any mistakes when showing how to use the object?","arial.ttf", 28, textColor);
 	q1text->Off();
 
-	q2text = Image::ImageText(q2text, "Were you successful overall in showing how to use the object?","arial.ttf", 28, textColor);
+	q2text = Image::ImageText(q2text, "Did you correctly show how to use this object?","arial.ttf", 28, textColor);
+	//q2text = Image::ImageText(q2text, "Were you successful overall in showing how to use the object?","arial.ttf", 28, textColor);
 	q2text->Off();
 
 	//set up the new data file and start recording
@@ -802,7 +814,7 @@ void clean_up()
 	delete returntext;
 	delete mousetext;
 	delete q1text;
-	delete q2text;
+	//delete q2text;
 
 	//std::cerr << "Deleted all objects." << std::endl;
 
@@ -849,8 +861,8 @@ static void draw_screen()
 	}
 
 	respprompt->Draw();
-	q1text->DrawAlign(float(PHYSICAL_WIDTH)/3.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
-	q2text->DrawAlign(float(PHYSICAL_WIDTH)/3.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
+	q1text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
+	q2text->DrawAlign(float(PHYSICAL_WIDTH)/5.0f,float(PHYSICAL_HEIGHT)*3.0f/5.0f,3);
 
 	blackRegion.Draw();
 
@@ -1330,7 +1342,7 @@ void game_update()
 	case Q1State:
 
 
-		if (qresponded && !gotkey && (trialTimer->Elapsed() > 1500))
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
 		{
 			Target.key = ' ';
 			trialTimer->Reset();// = SDL_GetTicks();
@@ -1339,10 +1351,13 @@ void game_update()
 			gotkey = false;
 			didgotkey = false;
 
+			//we have responses for both questions, we will save that out
+			qrecord = true;
+
 			q2text->On();
 			respprompt->On();
-
 			state = Q2State;
+			//state = EndTrial;
 		}
 
 
@@ -1365,7 +1380,7 @@ void game_update()
 	case Q2State:
 
 
-		if (qresponded && !gotkey && (trialTimer->Elapsed() > 1500))
+		if (qresponded && !gotkey && keyup && (trialTimer->Elapsed() > 1500))
 		{
 			Target.key = ' ';
 			trialTimer->Reset();// = SDL_GetTicks();
