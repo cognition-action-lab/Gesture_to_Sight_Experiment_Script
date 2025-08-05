@@ -148,7 +148,7 @@ DataWriter::DataWriter(TargetFrame Target, const char* filename)
 			 << "Redo "
 			 << "Item "
 			 << "Vision "
-			 << "ErrQ1Resp"
+			 << "ErrQ1Resp "
 			 << "ErrQ2Resp "
 			 << "QPriorProResp "
 			 << "QPriorProConfResp "
